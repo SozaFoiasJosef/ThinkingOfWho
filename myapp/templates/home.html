@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Thinking of Who{% endblock %}
+
+{% block extra_css %}
+<style>
+    .welcome-section {
+        background-color: #B8F2E6;
+		background: linear-gradient(135deg, #FFA69E 00%, #6fa5d4 75%);
+        padding: 60px 20px;
+        border-radius: 10px;
+        text-align: center;
+        margin-bottom: 40px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .welcome-section h1 {
+        font-size: 2.8em;
+        color: white;
+        margin-bottom: 20px;
+        font-weight: 600;
+    }
+
+    .welcome-section p {
+        font-size: 1.2em;
+        color: white;
+        margin-bottom: 30px;
+        line-height: 1.8;
+    }
+
+    .cta-button {
+        display: inline-block;
+        background: #FFA69E;
+        color: white;
+        padding: 25px 60px;
+        text-decoration: none;
+        border-radius: 5px;
+        font-size: 1.1em;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border: 2px solid #FFA69E;
+
+        cursor: pointer;
+        border:none;
+        transition: background 0.2s ease, transform 0.08s ease;
+    }
+
+    .cta-button:hover {
+        background: #ff9085;
+        transform: translateY(-1px);
+    }
+
+    .how-to-play {
+        background-color: white;
+        padding: 40px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        margin-top: 40px;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .how-to-play-layout {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 32px;
+        margin-top: 40px;
+        flex-wrap: wrap;
+    }
+
+    .how-to-play-layout .how-to-play {
+        margin-top: 0;
+        flex: 1 1 520px;
+        max-width: 640px;
+    }
+
+    .how-to-play-gif {
+        flex: 0 1 640px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .how-to-play-gif img {
+        width: 100%;
+        max-width: 640px;
+        height: auto;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    }
+
+    @media (max-width: 900px) {
+        .how-to-play-layout {
+            flex-direction: column;
+            gap: 20px;
+        }
+        .how-to-play-gif {
+            order: 0;
+        }
+    }
+
+    .how-to-play h2 {
+        color: #84BBE3;
+        margin-bottom: 25px;
+        font-size: 1.8em;
+        text-align: center;
+    }
+
+    .step {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 20px;
+        align-items: flex-start;
+        justify-content: center;
+    }
+
+    .step-number {
+        background-color: #FFA69E;
+        color: white;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        flex-shrink: 0;
+    }
+
+    .step-content h3 {
+        color: #84BBE3;
+        margin-bottom: 8px;
+    }
+
+    .step-content p {
+        color: #666;
+        font-size: 0.95em;
+        line-height: 1.6;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="welcome-section">
+    <h1>{{ title }}</h1>
+    <p>Have fun playing this image-based deduction game!</p>
+    <a href="/creategame/" class="cta-button">Start Playing</a>
+</div>
+{% load static %}
+<div class="how-to-play-layout">
+    <div class="how-to-play-gif">
+        <!-- GIF created from video: https://ezgif.com/  */ -->
+        <img src="{% static 'gifs/create_page.gif' %}" alt="Create game">
+    </div>
+    <div class="how-to-play">
+        <!-- Images Retrieved from: https://commons.wikimedia.org/wiki/Main_Page */ -->
+        <h2>How to Play</h2>
+        <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <h3>Create a Game</h3>
+                <p>Click "Start Playing" to create your own game. Upload (or paste) images and give your game a name. Share the game code with your friend.</p>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <h3>Find a Game</h3>
+                <p>Use the game code or game name from your friend to join their created game. You'll see all the images they've selected.</p>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+                <h3>Make Your Choice</h3>
+                <p>Carefully examine each image. Choose and click on the image you will be playing as.</p>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">4</div>
+            <div class="step-content">
+                <h3>Ask Questions</h3>
+                <p>Take turns asking yes/no questions about the opponent's selected image.</p>
+            </div>
+        </div>
+    </div>
+    <div class="how-to-play-gif">
+        <!-- GIF created from video: https://ezgif.com/ */ -->
+        <img src="{% static 'gifs/play_game.gif' %}" alt="Play game">
+    </div>
+</div>
+{% endblock %}

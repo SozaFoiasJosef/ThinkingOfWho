@@ -1,0 +1,383 @@
+{% extends "base.html" %}
+
+{% block title %}Join a Game - Thinking of Who{% endblock %}
+
+{% block extra_css %}
+<style>
+	.form-card {
+		max-width: 100%;
+		margin: 0 auto;
+		background: white;
+		border-radius: 10px;
+		padding: 30px;
+		box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+		width: 100%;
+	}
+
+	.form-card h2 {
+		align-items: center;
+		margin-bottom: 18px;
+		color: #84BBE3;
+		font-size: 1.6rem;
+	}
+
+	.room-code-section {
+		display: flex;
+		justify-content: center;
+		gap: 12px;
+		margin-bottom: 24px;
+		flex-wrap: wrap;
+		
+	}
+
+	/* Layout for the two join options side-by-side with a vertical OR separator */
+	.side-by-side-wrapper {
+		display: flex;
+		gap: 0;
+		align-items: stretch;
+		justify-content: center;
+		position: relative;
+		margin-top: 12px;
+	}
+
+	.side-by-side-wrapper .side-by-side {
+		flex: 1 1 0;
+		padding: 12px 24px;
+		box-sizing: border-box;
+	}
+
+	/* vertical separator line */
+	.side-by-side-wrapper::before {
+		content: "";
+		position: absolute;
+		left: 50%;
+		top: 12px;
+		bottom: 12px;
+		width: 1px;
+		background: #e6e6e6;
+		transform: translateX(-50%);
+	}
+
+	/* OR badge centered on the separator */
+	.side-by-side-wrapper::after {
+		content: "OR";
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		transform: translate(-50%, -50%);
+		background: white;
+		padding: 6px 10px;
+		color: #666;
+		border-radius: 20px;
+		border: 1px solid #f0f0f0;
+		font-weight: 700;
+	}
+
+	.room-code-section input {
+		padding: 10px 12px;
+		border: 1px solid #e6e6e6;
+		border-radius: 6px;
+		font-size: 1rem;
+		min-width: 200px;
+	}
+
+	.room-code-section button {
+		padding: 10px 20px;
+		background: #84BBE3;
+		color: white;
+		border: none;
+		border-radius: 6px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: background 0.2s ease;
+	}
+
+	.room-code-section button:hover {
+		background: #FFA69E;
+	}
+
+	.image-preview-container {
+		display: grid;
+		grid-template-columns: repeat(5, 1fr);
+		gap: 12px;
+		margin-top: 12px;
+	}
+
+	.tile {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+
+	.tile-actions {
+		display: flex;
+		justify-content: center;
+	}
+
+	.btn-fold {
+		padding: 6px 10px;
+		border-radius: 6px;
+		cursor: pointer;
+		font-weight: 600;
+		background: #84BBE3;
+		color: white;
+		border: none;
+	}
+
+	.btn-fold.active {
+		border: 1px solid #e6e6e6;
+		background: #fff;
+		color: black;
+	}
+
+	.image-preview {
+		position: relative;
+		border: 2px solid #e6e6e6;
+		border-radius: 8px;
+		overflow: hidden;
+		background: #f9f9f9;
+		aspect-ratio: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.image-preview img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	.image-preview .preview-label {
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		background: rgba(0, 0, 0, 0.6);
+		color: white;
+		padding: 4px 6px;
+		font-size: 0.8rem;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		text-align: center;
+	}
+
+	@media (max-width: 1200px) {
+		.image-preview-container { grid-template-columns: repeat(4, 1fr); }
+	}
+	@media (max-width: 900px) {
+		.image-preview-container { grid-template-columns: repeat(3, 1fr); gap:10px; }
+	}
+	@media (max-width: 600px) {
+		.image-preview-container { grid-template-columns: repeat(2, 1fr); gap:8px; }
+		.room-code-section { flex-direction: column; }
+		.room-code-section input { min-width: 100%; }
+	}
+	@media (max-width: 400px) {
+		.image-preview-container { grid-template-columns: 1fr; }
+	}
+
+	@media (max-width: 900px) {
+		.side-by-side-wrapper { flex-direction: column; }
+		.side-by-side-wrapper::before, .side-by-side-wrapper::after { display: none; }
+	}
+
+	/* Featured image slot */
+	.featured-slot {
+		max-width: 500px;
+		margin: 0 auto 24px auto;
+		padding: 12px;
+		background: linear-gradient(135deg, #FFA69E 00%, #6fa5d4 75%);
+		border-radius: 12px;
+		box-shadow: 0 8px 24px rgba(132, 187, 227, 0.25);
+		border: 3px solid #fff;
+	}
+
+	.featured-slot h3 {
+		margin: 0 0 12px 0;
+		color: white;
+		font-size: 0.95rem;
+		text-align: center;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+	}
+
+	.featured-image-container {
+		position: relative;
+		border-radius: 8px;
+		overflow: hidden;
+		background: #f9f9f9;
+		width: 150px;
+		height: 150px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+		margin: 0 auto;
+	}
+
+	.featured-image-container.placeholder {
+		background: rgba(255, 255, 255, 0.3);
+		border: 2px dashed rgba(255, 255, 255, 0.5);
+	}
+
+	.placeholder-text {
+		color: rgba(255, 255, 255, 0.9);
+		font-size: 0.85rem;
+		text-align: center;
+		font-weight: 600;
+	}
+
+	.featured-image-container img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		display: none;
+	}
+
+	.featured-label {
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		background: rgba(0, 0, 0, 0.7);
+		color: white;
+		padding: 6px 8px;
+		font-size: 0.8rem;
+		text-align: center;
+		font-weight: 600;
+		max-height: 40px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		display: none;
+	}
+
+	.featured-label.visible {
+		display: block;
+	}
+
+	.tile.selected {
+		opacity: 0.7;
+		border: 3px solid #84BBE3;
+		border-radius: 8px;
+	}
+
+	.placeholder-image {
+		background: linear-gradient(135deg, #e6e6e6 0%, #d3d3d3 100%);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: #999;
+		font-weight: 600;
+		font-size: 0.9rem;
+	}
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="form-card">
+	<h2 style="text-align: center;">Find a Game</h2>
+
+	<div class="side-by-side-wrapper">
+		<div class="side-by-side">
+			<div class="featured-slot">
+				<h3 class="featured-slot h3"> How To:<br>
+					<br>1. Get the game code from your friend<br>
+					<br>2. Paste the code and click "Find Game"<br>
+					<br>3. Have fun!
+				</h3>
+			</div>
+			<div class="room-code-section">
+				<input type="text" id="room-code-input" placeholder="Enter game code..." />
+				<button id="join-room-by-code-btn">Find Game</button>
+			</div>
+		</div>
+
+		<div class="side-by-side">
+			<div class="featured-slot">
+				<h3 class="featured-slot h3"> How To:<br>
+					<br>1. Type the name of a game and click "Find Game"<br>
+					<br>2. Only searchable games can be found<br>
+					<br>3. Have fun!
+				</h3>
+			</div>
+			<div class="room-code-section">
+				<input type="text" id="room-name-input" placeholder="Enter game name..." />
+				<button id="join-room-by-name-btn">Find Game</button>
+			</div>
+		</div>
+	</div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+	(function(){
+		// Room code join functionality
+		var joinBtn = document.getElementById('join-room-by-code-btn');
+		var codeInput = document.getElementById('room-code-input');
+		
+		async function tryJoinRoom(){
+			var code = codeInput.value.trim();
+			if(!code) return;
+
+			try {
+				const response = await fetch(`/game/${code}/`, {
+					method: "HEAD"
+				});
+			
+				if (response.ok) {
+					window.location.href = `/game/${code}/`;
+				} else if (response.status === 404) {
+					alert("Game not found. Please check the code and try again.");
+				} else {
+					alert("An error occurred while trying to join the game. Please try again later.");
+				}
+			} catch (error) {
+				alert('Network error. Please try again.');
+			}
+		}
+		
+		if(joinBtn && codeInput){
+			joinBtn.addEventListener('click', tryJoinRoom);
+			codeInput.addEventListener('keypress', function(e){
+				if(e.key === 'Enter') tryJoinRoom();
+			});
+		}
+
+		// Room name join functionality
+		var joinByNameBtn = document.getElementById('join-room-by-name-btn');
+		var nameInput = document.getElementById('room-name-input');
+		
+		async function tryJoinRoomName(){
+			var roomName = nameInput.value.trim();
+			if(!roomName) return;
+
+			try {
+				const response = await fetch(`/gamelist/${encodeURIComponent(roomName)}/`, {
+					method: "HEAD"
+				});
+			
+				if (response.ok) {
+					window.location.href = `/gamelist/${encodeURIComponent(roomName)}/`;
+				} else if (response.status === 404) {
+					alert("Game list not found. Please check the name and try again.");
+				} else {
+					alert("An error occurred while trying to find the game list. Please try again later.");
+				}
+			} catch (error) {
+				alert('Network error. Please try again.');
+			}
+		}
+		
+		if(joinByNameBtn && nameInput){
+			joinByNameBtn.addEventListener('click', tryJoinRoomName);
+			nameInput.addEventListener('keypress', function(e){
+				if(e.key === 'Enter') tryJoinRoomName();
+			});
+		}
+	})();
+</script>
+{% endblock %}

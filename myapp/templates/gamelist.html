@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Thinking of Who{% endblock %}
+
+{% block extra_css %}
+<style>
+  .rooms-table-card { 
+    max-width:100%; 
+    margin:0 auto; 
+    background:#fff; 
+    border-radius:10px; 
+    padding:18px; 
+    box-shadow:0 6px 18px rgba(0,0,0,0.06);
+}
+  .rooms-table { 
+    width:100%; 
+    border-collapse:collapse; 
+}
+  .rooms-table thead th { 
+    position:sticky; 
+    top:0; 
+    background:#fafafa; 
+    padding:12px; 
+    text-align:left; 
+    border-bottom:1px solid #e6e6e6; 
+    z-index:2; cursor:pointer; 
+    user-select:none; 
+}
+  .rooms-table thead th:hover { 
+    background:#f0f0f0; 
+}
+  .rooms-table thead th.sortable::after { 
+    content:' ↕'; 
+    font-size:0.75rem; 
+    color:#999; 
+}
+  .rooms-table thead th.sort-asc::after { 
+    content:' ↑'; color:#333; 
+}
+  .rooms-table thead th.sort-desc::after { 
+    content:' ↓'; 
+    color:#333; 
+}
+  /* make tbody scrollable */
+  .rooms-table tbody { 
+    display:block; 
+    max-height:62vh; 
+    overflow-y:auto; 
+}
+  .rooms-table thead, .rooms-table tbody tr { 
+    display:table; 
+    width:100%; 
+    table-layout:fixed; 
+}
+  .rooms-table td { 
+    padding:10px; 
+    border-bottom:1px solid #f0f0f0; 
+    vertical-align:middle; 
+    overflow:hidden; 
+    text-overflow:ellipsis; 
+    white-space:nowrap; 
+}
+  .room-name-col { 
+    width:35%; 
+}
+  .room-images-col { 
+    width:45%; 
+}
+  .room-date-col { 
+    width:20%; 
+}
+  .image-preview-inline { 
+    display:inline-block; 
+    width:72px; 
+    height:72px; 
+    margin-right:8px; 
+    border-radius:6px; 
+    overflow:hidden; 
+    background:#f2f2f2; 
+}
+  .image-preview-inline img { 
+    width:100%; 
+    height:100%; 
+    object-fit:cover; 
+}
+  .no-images { 
+    color:#999; 
+    font-size:0.9rem; 
+}
+  @media (max-width:900px){ 
+    .image-preview-inline{
+        width:48px;
+        height:48px;
+    } 
+        .room-name-col{
+            width:40%;
+        } 
+            }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="rooms-table-card">
+  <h2>Games matching "{{ search_name }}"</h2>
+
+  <table class="rooms-table" aria-describedby="results-count">
+    <thead>
+      <tr>
+        <th class="room-name-col sortable" data-sort="name">Game Name</th>
+        <th class="room-images-col">Images</th>
+        <th class="room-date-col sortable" data-sort="date">Date Created</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for room in rooms|slice:":50" %}
+      <tr>
+        <td class="room-name-col"><a href="{% url 'game' room.id %}">{{ room.name }}</a></td>
+        <td class="room-images-col">
+          {% with imgs=room.image_set.all|slice:":4" %}
+            {% if imgs %}
+              {% for img in imgs %}
+                <span class="image-preview-inline"><img src="{{ img.image.url }}" alt="{{ img.title }}"></span>
+              {% endfor %}
+            {% else %}
+              <span class="no-images">No images</span>
+            {% endif %}
+          {% endwith %}
+        </td>
+        <td class="room-date-col">{{ room.created_at|date:"m/d/Y" }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="3">No games found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (function(){
+    var table = document.querySelector('.rooms-table');
+    var tbody = table.querySelector('tbody');
+    var headers = table.querySelectorAll('th[data-sort]');
+    var currentSort = { key: null, dir: 'asc' };
+
+    function getRowData(row) {
+      var nameCell = row.querySelector('.room-name-col a');
+      var dateCell = row.querySelector('.room-date-col');
+      return {
+        name: nameCell ? nameCell.textContent.trim() : '',
+        date: dateCell ? dateCell.textContent.trim() : '',
+        row: row
+      };
+    }
+
+    function sortTable(sortKey) {
+      var rows = Array.from(tbody.querySelectorAll('tr')).filter(r => r.querySelector('a'));
+      if (!rows.length) return;
+
+      if (currentSort.key === sortKey) {
+        currentSort.dir = currentSort.dir === 'asc' ? 'desc' : 'asc';
+      } else {
+        currentSort.key = sortKey;
+        currentSort.dir = 'asc';
+      }
+
+      rows.sort(function(a, b) {
+        var aData = getRowData(a);
+        var bData = getRowData(b);
+        var aVal = sortKey === 'name' ? aData.name : new Date(aData.date).getTime();
+        var bVal = sortKey === 'name' ? bData.name : new Date(bData.date).getTime();
+
+        if (typeof aVal === 'string') {
+          aVal = aVal.toLowerCase();
+          bVal = bVal.toLowerCase();
+        }
+
+        return currentSort.dir === 'asc' ? (aVal > bVal ? 1 : -1) : (aVal < bVal ? 1 : -1);
+      });
+
+      headers.forEach(h => h.classList.remove('sort-asc', 'sort-desc'));
+      var activeHeader = Array.from(headers).find(h => h.dataset.sort === sortKey);
+      if (activeHeader) {
+        activeHeader.classList.add(currentSort.dir === 'asc' ? 'sort-asc' : 'sort-desc');
+      }
+
+      rows.forEach(row => tbody.appendChild(row));
+    }
+
+    headers.forEach(header => {
+      header.addEventListener('click', function() {
+        sortTable(this.dataset.sort);
+      });
+    });
+  })();
+</script>
+{% endblock %}

@@ -1,0 +1,612 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Thinking of Who{% endblock %}
+
+{% block extra_css %}
+
+<style>
+    .form-card {
+        max-width: 100%;
+        margin: 0 auto;
+        background: white;
+        border-radius: 10px;
+        padding: 30px;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+        width: 100%;
+    }
+
+    .form-card h2 {
+        margin-bottom: 18px;
+        color: #84BBE3;
+        font-size: 1.6rem;
+    }
+
+    .room_form {
+        display: grid;
+        grid-template-columns: repeat(8, 1fr);
+        gap: 12px;
+        width: 100%;
+    }
+
+    .room_form .form-row {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        background: #84BBE3;
+        padding: 12px;
+        border-radius: 6px;
+        border: 1px solid #e6e6e6;
+        transition: border-color 0.2s ease;
+    }
+
+    .room_form .form-row:hover {
+        border-color: #6a9bc9;
+    }
+
+    .room_form .form-row.paste-hint {
+        border: 2px dashed #FFA69E;
+    }
+
+    input[type="text"], input[type="file"], textarea, select {
+        padding: 10px 12px;
+        border: 1px solid #e6e6e6;
+        border-radius: 6px;
+        background: #fbfbfb;
+        font-size: 0.95rem;
+        box-sizing: border-box;
+        width: 100%;
+    }
+
+    /* Hide native file input and show a styled label as the button */
+    input[type="file"] {
+        display: none;
+    }
+
+    .file-btn {
+        display: inline-block;
+        padding: 8px 14px;
+        background-color: #FFA69E;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s ease, transform 0.06s ease;
+        text-align: center;
+        text-decoration: none;
+        position: relative;
+    }
+
+    .file-btn:hover {
+        background: #6a9bc9;
+        transform: translateY(-1px);
+    }
+
+    .file-btn::after {
+        content: 'or paste (Ctrl+V)';
+        position: absolute;
+        bottom: -22px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        white-space: nowrap;
+        font-size: 0.75rem;
+        font-weight: normal;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+    }
+
+    .file-btn:hover::after {
+        opacity: 1;
+    }
+
+    input::placeholder, textarea::placeholder {
+        color: #999;
+    }
+
+    input[type="submit"], .btn {
+        display: inline-block;
+        padding: 10px 18px;
+        background: #84BBE3;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: background 0.2s ease, transform 0.08s ease;
+    }
+
+    input[type="submit"]:hover, .btn:hover {
+        background: #FFA69E;
+        transform: translateY(-1px);
+    }
+
+    .form-actions {
+        margin-top: 24px;
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        grid-column: 1 / -1;
+    }
+
+    @media (max-width: 1750px) {
+        .room_form {
+            grid-template-columns: repeat(6, 1fr);
+        }
+        .form-card {
+            padding: 24px;
+        }
+    }
+    
+    @media (max-width: 1325px) {
+        .room_form {
+            grid-template-columns: repeat(5, 1fr);
+        }
+        .form-card {
+            padding: 24px;
+        }
+    }
+
+    @media (max-width: 1200px) {
+        .room_form {
+            grid-template-columns: repeat(4, 1fr);
+        }
+        .form-card {
+            padding: 24px;
+        }
+    }
+
+    @media (max-width: 900px) {
+        .room_form {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        .room_form .form-row {
+            padding: 10px;
+        }
+        .form-card {
+            padding: 18px;
+        }
+    }
+
+    @media (max-width: 650px) {
+        .form-card { 
+            padding: 12px;
+        }
+        .room_form {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+        .room_form .form-row {
+            padding: 8px;
+        }
+        .form-actions { justify-content: center; }
+        input[type="text"], input[type="file"], textarea, select {
+            padding: 8px 10px;
+            font-size: 0.9rem;
+        }
+    }
+
+    @media (max-width: 400px) {
+        .room_form {
+            grid-template-columns: 1fr;
+        }
+        .form-card {
+            padding: 8px;
+        }
+        .room_form .form-row {
+            padding: 6px;
+        }
+    }
+
+    .room-code-section {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        margin: 24px auto 0;
+        flex-wrap: nowrap;
+        max-width: 480px;
+        border: 2px solid #84BBE3;
+        border-radius: 8px;
+        padding: 10px 12px;
+	}
+
+    .room-code-section input[type="text"] {
+        padding: 10px 12px;
+        border: 1px solid #e6e6e6;
+        border-radius: 6px;
+        font-size: 1rem;
+        min-width: 200px;
+        flex: 1 1 auto;
+        box-sizing: border-box;
+    }
+
+    .room-code-section button,
+    .room-code-section input[type="submit"],
+    .room-code-section .btn {
+        padding: 10px 18px;
+        background: #84BBE3;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .image-preview-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 12px;
+        margin-top: 12px;
+    }
+
+    .image-preview {
+        position: relative;
+        border: 2px solid #e6e6e6;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #f9f9f9;
+        aspect-ratio: 1;
+    }
+
+    .image-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .image-preview .preview-label {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(0, 0, 0, 0.6);
+        color: white;
+        padding: 4px 6px;
+        font-size: 0.8rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .room-layout {
+        display: flex;
+        gap: 32px;
+        align-items: flex-start; /* top-align both sections */
+    }
+
+    .featured-slot {
+		max-width: 500px;
+		margin: 0 auto 24px auto;
+		padding: 12px;
+		background: linear-gradient(135deg, #FFA69E 0%, #6fa5d4 100%);
+		border-radius: 12px;
+		box-shadow: 0 8px 24px rgba(132, 187, 227, 0.25);
+		border: 3px solid #fff;
+	}
+
+    .hidden-input {
+        display: none;
+    }
+
+    .bulk-upload-section {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 24px;
+        padding: 8px;
+        background: #84BBE3;
+        border-radius: 8px;
+        flex-wrap: wrap;
+    }
+
+    .bulk-upload-btn {
+        display: inline-block;
+        padding: 10px 18px;
+        background: #FFA69E;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s ease, transform 0.08s ease;
+        font-size: 0.95rem;
+    }
+
+    .bulk-upload-btn:hover {
+        background: #ff9085;
+        transform: translateY(-1px);
+    }
+
+    .bulk-upload-status {
+        position: absolute;
+        top: -40px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #6fa5d4;
+        color: white;
+        padding: 8px 14px;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        white-space: nowrap;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.2s;
+        z-index: 10;
+    }
+
+    .bulk-upload-status::after {
+        content: '';
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 6px solid transparent;
+        border-top-color: #6fa5d4;
+    }
+
+    .bulk-upload-status.visible {
+        opacity: 1;
+    }
+
+    .bulk-upload-status.success {
+        background: #27ae60;
+    }
+
+    .bulk-upload-status.success::after {
+        border-top-color: #27ae60;
+    }
+
+    .bulk-upload-status.error {
+        background: #e74c3c;
+    }
+
+    .bulk-upload-status.error::after {
+        border-top-color: #e74c3c;
+    }
+
+    #bulk-file-input {
+        display: none;
+    }
+</style>
+
+{% endblock %}
+
+{% block content %}
+<section class="form-card">
+    <h2 style="text-align: center;">Create a Game</h2>
+
+    
+    <form id="room_form" method="post" action="" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        {{ formset.management_form }}
+        
+        <div class="bulk-upload-section">
+            <div style="position: relative; margin: 24px 0 0 0;">
+                <button type="button" class="bulk-upload-btn" id="bulk-upload-btn">📁 Bulk Upload Images</button>
+                <span class="bulk-upload-status" id="bulk-upload-status"></span>
+                <input type="file" id="bulk-file-input" multiple accept="image/*">
+            </div>
+        </div>
+
+        <div class="room_form">
+            {% for form in formset %}
+            <div class="form-row">
+                {% for field in form.visible_fields %}
+                    {% if field.field.widget.input_type == 'file' %}
+                        <label class="file-btn" for="{{ field.id_for_label }}">Choose Image</label>
+                        {{ field }}
+                    {% else %}
+                        {% with field as f %}
+                            {{ f }}
+                        {% endwith %}
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endfor %}
+        </div>
+        <div class="">
+            <div class="room-code-section">
+                <div style="flex:1 1 auto; display:flex; gap:12px; align-items:center;">
+                    {% with roomForm.name as field %}{{ field }}{% endwith %}
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; border-radius: 6px; border: 2px solid #84BBE3; padding: 6px;">
+                    {{ roomForm.isSearchable }}
+                    <label for="{{ roomForm.isSearchable.id_for_label }}" style="margin:0;white-space:nowrap;">Searchable</label>
+                </div>
+                <input type="submit" name="submit" value="Create Game" class="btn"/>
+            </div>
+        </div>
+        
+    </form>
+    
+        
+        
+    
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function(){
+        var form = document.getElementById('room_form');
+        if(!form) return;
+
+        // Store file inputs for bulk upload
+        var fileInputs = [];
+
+        // Function to handle image preview
+        function updateImagePreview(input, index) {
+            var previewContainer = document.getElementById('preview-container-' + index);
+            previewContainer.innerHTML = '';
+
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    var preview = document.createElement('div');
+                    preview.className = 'image-preview';
+                    
+                    var img = document.createElement('img');
+                    img.src = e.target.result;
+                    
+                    var label = document.createElement('div');
+                    label.className = 'preview-label';
+                    label.textContent = input.files[0].name;
+                    
+                    preview.appendChild(img);
+                    preview.appendChild(label);
+                    previewContainer.appendChild(preview);
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Bulk upload functionality
+        var bulkUploadBtn = document.getElementById('bulk-upload-btn');
+        var bulkFileInput = document.getElementById('bulk-file-input');
+        var bulkUploadStatus = document.getElementById('bulk-upload-status');
+
+        if (bulkUploadBtn && bulkFileInput) {
+            bulkUploadBtn.addEventListener('click', function() {
+                bulkFileInput.click();
+            });
+
+            bulkFileInput.addEventListener('change', function() {
+                var files = Array.from(this.files);
+                var fileInputsArray = fileInputs;
+
+                if (files.length === 0) {
+                    bulkUploadStatus.textContent = '';
+                    return;
+                }
+
+                // Get the next available file inputs
+                var availableInputs = fileInputsArray.filter(function(inp) {
+                    return !inp.files || inp.files.length === 0;
+                });
+
+                if (availableInputs.length === 0) {
+                    bulkUploadStatus.textContent = '❌ No empty slots available!';
+                    bulkUploadStatus.classList.remove('success');
+                    bulkUploadStatus.classList.add('error', 'visible');
+                    
+                    setTimeout(function() {
+                        bulkUploadStatus.classList.remove('visible');
+                        setTimeout(function() {
+                            bulkUploadStatus.textContent = '';
+                            bulkUploadStatus.classList.remove('success', 'error');
+                        }, 200);
+                    }, 2000);
+                    return;
+                }
+
+                var uploadedCount = 0;
+                files.forEach(function(file, fileIndex) {
+                    if (fileIndex < availableInputs.length) {
+                        var input = availableInputs[fileIndex];
+                        var dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(file);
+                        input.files = dataTransfer.files;
+                        
+                        // Find the index of this input to update preview
+                        var inputIndex = fileInputsArray.indexOf(input);
+                        if (inputIndex !== -1) {
+                            updateImagePreview(input, inputIndex);
+                        }
+                        uploadedCount++;
+                    }
+                });
+
+                bulkUploadStatus.textContent = '✅ Uploaded ' + uploadedCount + ' image(s)!';
+                bulkUploadStatus.classList.remove('error');
+                bulkUploadStatus.classList.add('success', 'visible');
+
+                // Clear the status message after 2 seconds
+                setTimeout(function() {
+                    bulkUploadStatus.classList.remove('visible');
+                    setTimeout(function() {
+                        bulkUploadStatus.textContent = '';
+                        bulkUploadStatus.classList.remove('success', 'error');
+                    }, 200);
+                }, 2000);
+
+                // Reset the input so the same file can be selected again
+                bulkFileInput.value = '';
+            });
+        }
+
+        // Preview images on file input change
+        document.querySelectorAll('input[type="file"][accept*="image"]').forEach(function(input, index) {
+            fileInputs.push(input);
+
+            var container = document.createElement('div');
+            container.className = 'image-preview-container';
+            container.id = 'preview-container-' + index;
+            input.parentNode.insertBefore(container, input.nextSibling);
+
+            input.addEventListener('change', function() {
+                updateImagePreview(input, index);
+            });
+
+            // Add paste event listener for clipboard image support
+            input.parentNode.addEventListener('paste', function(e) {
+                var items = (e.clipboardData || e.originalEvent.clipboardData).items;
+                for (var i = 0; i < items.length; i++) {
+                    if (items[i].kind === 'file' && items[i].type.indexOf('image') !== -1) {
+                        e.preventDefault();
+                        var file = items[i].getAsFile();
+                        
+                        // Create a DataTransfer to set the file on the input
+                        var dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(file);
+                        input.files = dataTransfer.files;
+                        
+                        // Trigger change event to update preview
+                        var event = new Event('change', { bubbles: true });
+                        input.dispatchEvent(event);
+                        break;
+                    }
+                }
+            });
+        });
+
+        form.addEventListener('submit', function(e){
+            e.preventDefault();
+            var formData = new FormData(form);
+
+            fetch(form.action || window.location.href, {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            }).then(function(resp){
+                if (!resp.ok) throw new Error('Network response was not ok');
+                return resp.json();
+            }).then(function(data){
+                if (data && data.room_id) {
+                    var gameUrl = '/game/' + data.room_id + '/';
+                    // redirect current tab to the game page
+                    window.location.href = gameUrl;
+                } else {
+                    // fallback to normal submit if no room_id returned
+                    form.submit();
+                }
+            }).catch(function(){
+                // on error, fallback to normal submit
+                form.submit();
+            });
+        });
+    })();
+</script>
+{% endblock %}

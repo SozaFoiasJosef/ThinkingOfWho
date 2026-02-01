@@ -1,0 +1,581 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Thinking of Who{% endblock %}
+
+{% block extra_css %}
+
+{% endblock %}
+
+{% block content %}
+<style>
+	.form-card {
+		max-width: 100%;
+		margin: 0 auto;
+		background: white;
+		border-radius: 10px;
+		padding: 30px;
+		box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+		width: 100%;
+	}
+
+	.form-card h2 {
+        align-items: center;
+		margin-bottom: 18px;
+		color: #84BBE3;
+		font-size: 2rem;
+	}
+
+	.image-preview-container {
+		display: grid;
+		grid-template-columns: repeat(8, 1fr);
+		gap: 12px;
+		margin-top: 12px;
+	}
+
+	.tile {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+
+	.tile-actions {
+		display: flex;
+		justify-content: center;
+	}
+
+	.btn-fold {
+		padding: 6px 10px;
+		border-radius: 6px;
+		
+		cursor: pointer;
+		font-weight: 600;
+        background: #84BBE3;
+		color: white;
+		border-color: transparent;
+	}
+
+	.btn-fold-white {
+		padding: 6px 10px;
+		border-radius: 6px;
+		
+		cursor: pointer;
+		font-weight: 600;
+        background: white;
+		color: #84BBE3;
+		border-color: transparent;
+	}
+
+	.copy-btn {
+		width: 40px;
+		height: 40px;
+		padding: 0;
+		border-radius: 50%;
+		cursor: pointer;
+		background: white;
+		color: #84BBE3;
+		border: 2px solid #84BBE3;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		margin-left: 12px;
+		transition: background 0.15s, transform 0.12s, border-color 0.15s;
+		position: relative;
+		box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+	}
+
+	.copy-btn svg {
+		width: 24px;
+		height: 24px;
+		color: inherit;
+	}
+
+	.copy-btn:hover {
+		background: #84BBE3;
+		border-color: #84BBE3;
+		transform: translateY(-1px);
+	}
+
+	.copy-btn:hover svg {
+		color: white;
+	}
+
+	.copy-tooltip {
+		position: absolute;
+		top: -35px;
+		left: 50%;
+		transform: translateX(-50%);
+		background: #6fa5d4;
+		color: white;
+		padding: 6px 12px;
+		border-radius: 4px;
+		font-size: 0.85rem;
+		font-weight: 600;
+		white-space: nowrap;
+		pointer-events: none;
+		opacity: 0;
+		transition: opacity 0.2s;
+		z-index: 10;
+	}
+
+	.copy-tooltip::after {
+		content: '';
+		position: absolute;
+		top: 100%;
+		left: 50%;
+		transform: translateX(-50%);
+		border: 6px solid transparent;
+		border-top-color: #6fa5d4;
+	}
+
+	.copy-tooltip.visible {
+		opacity: 1;
+	}
+
+	/* .btn-fold-white.active {
+		border: 1px solid #e6e6e6;
+		background: black;
+        color: #fff;
+	}
+
+	.btn-fold.active {
+		border: 1px solid #e6e6e6;
+		background: #fff;
+        color: black;
+	} */
+
+	/* 3D folding animation */
+	.image-preview {
+		perspective: 1000px;
+	}
+
+	.img-inner {
+		width: 100%;
+		height: 100%;
+		display: block;
+		transform-origin: center bottom;
+		transform-style: preserve-3d;
+		backface-visibility: hidden;
+		backface-visibility: hidden;
+	}
+
+	/* staged fold keyframes: gentle first fold then sharper tuck */
+	@keyframes fold {
+		0% {
+			transform: none;
+			opacity: 1;
+			box-shadow: none;
+		}
+		45% {
+			transform: rotateX(-40deg) translateY(4%);
+			opacity: 0.9;
+			box-shadow: 0 14px 35px rgba(0,0,0,0.12);
+		}
+		80% {
+			transform: rotateX(-72deg) translateY(12%);
+			opacity: 0.35;
+			box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+		}
+		100% {
+			transform: rotateX(-90deg) translateY(20%);
+			opacity: 0;
+			box-shadow: none;
+		}
+	}
+
+	.img-inner.animated-fold {
+		animation: fold 700ms cubic-bezier(.2,.8,.2,1) forwards;
+	}
+
+	.img-inner.animated-unfold {
+		animation: fold 700ms cubic-bezier(.2,.8,.2,1) reverse forwards;
+	}
+
+	.img-inner.folded {
+		transform: rotateX(-90deg) translateY(20%);
+		opacity: 0;
+	}
+
+	.image-preview {
+		position: relative;
+		border: 2px solid #e6e6e6;
+		border-radius: 8px;
+		overflow: hidden;
+		background: #f9f9f9;
+		aspect-ratio: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.image-preview img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	.image-preview .preview-label {
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		background: rgba(0, 0, 0, 0.6);
+		color: white;
+		padding: 4px 6px;
+		font-size: 0.8rem;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		text-align: center;
+	}
+	@media (max-width: 2000px) {
+		.image-preview-container { grid-template-columns: repeat(6, 1fr); }
+	}
+	@media (max-width: 1200px) {
+		.image-preview-container { grid-template-columns: repeat(4, 1fr); }
+	}
+	@media (max-width: 900px) {
+		.image-preview-container { grid-template-columns: repeat(3, 1fr); gap:10px; }
+	}
+	@media (max-width: 600px) {
+		.image-preview-container { grid-template-columns: repeat(2, 1fr); gap:8px; }
+	}
+	@media (max-width: 400px) {
+		.image-preview-container { grid-template-columns: 1fr; }
+	}
+
+	/* Featured image slot */
+	.featured-slot {
+		max-width: 250px;
+		margin: 0 auto 24px auto;
+		padding: 12px;
+		background: linear-gradient(135deg, #FFA69E 0%, #6fa5d4 100%);
+		border-radius: 12px;
+		box-shadow: 0 8px 24px rgba(132, 187, 227, 0.25);
+		border: 3px solid #fff;
+	}
+
+	.featured-slot h3 {
+		margin: 0 0 12px 0;
+		color: white;
+		font-size: 0.95rem;
+		text-align: center;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+	}
+
+	.featured-image-container {
+		position: relative;
+		border-radius: 8px;
+		overflow: hidden;
+		background: #f9f9f9;
+		width: 150px;
+		height: 150px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+		margin: 0 auto;
+	}
+
+	.featured-image-container.placeholder {
+		background: rgba(255, 255, 255, 0.3);
+		border: 2px dashed rgba(255, 255, 255, 0.5);
+	}
+
+	.placeholder-text {
+		color: rgba(255, 255, 255, 0.9);
+		font-size: 0.85rem;
+		text-align: center;
+		font-weight: 600;
+	}
+
+	.featured-image-container img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		display: none;
+	}
+
+	.featured-label {
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		background: rgba(0, 0, 0, 0.7);
+		color: white;
+		padding: 6px 8px;
+		font-size: 0.8rem;
+		text-align: center;
+		font-weight: 600;
+		max-height: 40px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		display: none;
+	}
+
+	.featured-label.visible {
+		display: block;
+	}
+
+	.tile.selected {
+		opacity: 0.7;
+		border: 3px solid #84BBE3;
+		border-radius: 8px;
+	}
+
+	.featured-slot-tile {
+		max-width: 200px;
+		margin: 0 auto 0 auto;
+		padding: 12px;
+		background: linear-gradient(135deg, #B8F2E6 0%, #6fa5d4 100%);
+		border-radius: 12px;
+		box-shadow: 0 8px 24px rgba(132, 187, 227, 0.25);
+		border: 3px solid #fff;
+	}
+
+	.lock-btn {
+		width: 36px;
+		height: 36px;
+		padding: 0;
+		border-radius: 6px;
+		cursor: pointer;
+		background: white;
+		color: #84BBE3;
+		border: 2px solid white;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		margin-top: 8px;
+		transition: background 0.15s, color 0.15s, transform 0.12s;
+		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+	}
+
+	.lock-btn svg {
+		width: 20px;
+		height: 20px;
+		color: inherit;
+	}
+
+	.lock-btn:hover {
+		background: #84BBE3;
+		color: white;
+		transform: translateY(-1px);
+	}
+
+	.lock-btn.locked {
+		background: #FFA69E;
+		color: white;
+	}
+
+	.lock-btn.locked:hover {
+		background: #ff8f7d;
+	}
+
+	.lock-btn-container {
+		display: flex;
+		justify-content: center;
+		margin-top: 8px;
+		opacity: 0;
+		transition: opacity 0.3s;
+	}
+
+	.lock-btn-container.visible {
+		opacity: 1;
+	}
+</style>
+
+<section class="form-card">
+	<div style="display:flex;align-items:center;justify-content:center;margin-bottom:18px;">
+		<h2 style="margin:0;color:#84BBE3;font-size:2rem;">{{ room.name }}</h2>
+		<button id="copy-room-id" class="copy-btn" data-room-id="{{ room.id }}" aria-label="Copy game id">
+			<div class="copy-tooltip" id="copy-tooltip">Copied!</div>
+			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+				<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+				<rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+			</svg>
+		</button>
+	</div>
+	<div class="featured-slot" id="featured-slot">
+		<h3>Your Choice</h3>
+		<div class="featured-image-container placeholder" id="featured-image-container">
+			<div class="placeholder-text">Click an image to select</div>
+			<img id="featured-img" src="" alt="Featured image" style="display:none;">
+			<div class="featured-label" id="featured-label"></div>
+		</div>
+		<div class="lock-btn-container" id="lock-btn-container">
+			<button id="lock-featured-btn" class="lock-btn" aria-label="Lock featured image" title="Lock featured image">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+					<rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+					<path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+				</svg>
+			</button>
+		</div>
+	</div>
+	<div style="margin-bottom:12px;display:flex;justify-content:center;">
+		<button id="unfold-all" class="btn-fold">Reveal All</button>
+	</div>
+	<div class="image-preview-container">
+		{% for img in images %}
+		<div class="featured-slot-tile">
+			<div class="tile" data-img-id="{{ img.id }}" data-img-src="{{ img.image.url }}" data-img-title="{{ img.title }}">
+				<div class="image-preview">
+					<div class="img-inner">
+						<img src="{{ img.image.url }}" alt="{{ img.title }}">
+					</div>
+					<div class="preview-label">{{ img.title }}</div>
+				</div>
+				<div class="tile-actions">
+					<button type="button" class="btn-fold-white">Hide</button>
+				</div>
+			</div>
+			</div>
+		{% empty %}
+			<p>No images found for this game.</p>
+		{% endfor %}
+	</div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+	(function(){
+		function playFold(inner, btn) {
+			// start fold animation
+			inner.classList.remove('animated-unfold');
+			btn.textContent = "Show";
+			inner.classList.add('animated-fold');
+			if(btn) btn.classList.add('active');
+			inner.addEventListener('animationend', function handler(){
+				inner.classList.remove('animated-fold');
+				inner.classList.add('folded');
+				inner.removeEventListener('animationend', handler);
+			});
+		}
+
+		function playUnfold(inner, btn) {
+			inner.classList.remove('animated-fold');
+			btn.textContent = "Hide";
+			inner.classList.add('animated-unfold');
+			inner.addEventListener('animationend', function handler(){
+				inner.classList.remove('animated-unfold');
+				inner.classList.remove('folded');
+				if(btn) btn.classList.remove('active');
+				inner.removeEventListener('animationend', handler);
+			});
+		}
+
+		document.querySelectorAll('.btn-fold-white').forEach(function(btn){
+			btn.addEventListener('click', function(){
+				var tile = btn.closest('.tile');
+				if(!tile) return;
+				var inner = tile.querySelector('.img-inner');
+				if(!inner) return;
+				if(inner.classList.contains('folded')) playUnfold(inner, btn); else playFold(inner, btn);
+			});
+		});
+
+		var unfoldAllBtn = document.getElementById('unfold-all');
+		if(unfoldAllBtn){
+			unfoldAllBtn.addEventListener('click', function(){
+				document.querySelectorAll('.tile .img-inner.folded').forEach(function(inner){
+					var btn = inner.closest('.tile') ? inner.closest('.tile').querySelector('.btn-fold-white') : null;
+					playUnfold(inner, btn);
+				});
+			});
+		}
+
+		// Featured image selection
+		var isLocked = false;
+		document.querySelectorAll('.tile').forEach(function(tile){
+			tile.addEventListener('click', function(e){
+				// Don't select if clicking the fold button
+				if(e.target.classList.contains('btn-fold-white')) return;
+				
+				// Don't select if locked
+				if(isLocked) return;
+				
+				// Get image data
+				var imgSrc = tile.getAttribute('data-img-src');
+				var imgTitle = tile.getAttribute('data-img-title');
+				
+				if(!imgSrc) return;
+				
+				// Update featured slot
+				var featuredImg = document.getElementById('featured-img');
+				var featuredLabel = document.getElementById('featured-label');
+				var featuredContainer = document.getElementById('featured-image-container');
+				
+				featuredImg.src = imgSrc;
+				featuredImg.style.display = 'block';
+				featuredLabel.textContent = imgTitle;
+				featuredLabel.classList.add('visible');
+				
+				// Hide placeholder
+				featuredContainer.classList.remove('placeholder');
+				featuredContainer.querySelector('.placeholder-text').style.display = 'none';
+				
+				// Show lock button
+				var lockBtnContainer = document.getElementById('lock-btn-container');
+				if(lockBtnContainer) lockBtnContainer.classList.add('visible');
+				
+				// Update selected state
+				document.querySelectorAll('.tile.selected').forEach(function(t){
+					t.classList.remove('selected');
+				});
+				//tile.classList.add('selected');
+			});
+		});
+
+		// Lock featured image
+		var lockBtn = document.getElementById('lock-featured-btn');
+		if(lockBtn){
+			lockBtn.addEventListener('click', function(e){
+				e.stopPropagation();
+				isLocked = !isLocked;
+				if(isLocked){
+					lockBtn.classList.add('locked');
+					lockBtn.title = 'Unlock featured image';
+				} else {
+					lockBtn.classList.remove('locked');
+					lockBtn.title = 'Lock featured image';
+				}
+			});
+		}
+
+		// Copy game id to clipboard
+		var copyBtn = document.getElementById('copy-room-id');
+		if(copyBtn){
+			copyBtn.addEventListener('click', function(e){
+				e.preventDefault();
+				var id = copyBtn.getAttribute('data-room-id') || '';
+				if(!id) return;
+				function showCopied(){
+					var tooltip = document.getElementById('copy-tooltip');
+					tooltip.classList.add('visible');
+					setTimeout(function(){ tooltip.classList.remove('visible'); }, 2000);
+				}
+				if(navigator.clipboard && navigator.clipboard.writeText){
+					navigator.clipboard.writeText(id).then(function(){ showCopied(); }).catch(function(){ fallbackCopy(id); });
+				} else {
+					fallbackCopy(id);
+				}
+			});
+
+			function fallbackCopy(text){
+				var ta = document.createElement('textarea');
+				ta.value = text;
+				ta.style.position = 'fixed';
+				ta.style.left = '-9999px';
+				document.body.appendChild(ta);
+				ta.focus(); ta.select();
+				try{ document.execCommand('copy'); showCopied(); } catch(e){}
+				document.body.removeChild(ta);
+			}
+		}
+			
+		
+	})();
+</script>
+{% endblock %}
