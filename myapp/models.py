@@ -26,6 +26,13 @@ class Image(models.Model):
 
     def save(self, *args, **kwargs):
         # Compress the image before saving
-        if self.image:
-            self.image = compress_image(self.image)
+        if self.image and hasattr(self.image, 'read'):
+            try:
+                compressed_image = compress_image(self.image)
+                # Use the original filename structure for the upload path
+                self.image.name = room_images_path(self, compressed_image.name)
+                self.image = compressed_image
+            except Exception as e:
+                # If compression fails, log the error but continue with original image
+                print(f"Error compressing image: {e}")
         super().save(*args, **kwargs)
