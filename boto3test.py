@@ -1,3 +1,12 @@
+import os
+import sys
+import django
+
+# Setup Django
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ThinkingOfWho.settings')
+django.setup()
+
 import boto3
 from django.conf import settings
 
@@ -16,6 +25,8 @@ s3.put_object(
     Body=b'hello from django'
 )
 
+print("Upload successful!")
+
 # Verify it exists
 resp = s3.list_objects_v2(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Prefix='test-upload.txt')
-print(resp.get('Contents', []))
+print("Files in bucket:", resp.get('Contents', []))
