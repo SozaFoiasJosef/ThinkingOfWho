@@ -29,8 +29,7 @@ class Image(models.Model):
         if self.image and hasattr(self.image, 'read'):
             try:
                 compressed_image = compress_image(self.image)
-                # Ensure the compressed file has the correct upload path
-                compressed_image.name = room_images_path(self, compressed_image.name)
+                # Just replace the image - upload_to will handle the path
                 self.image = compressed_image
             except Exception as e:
                 # If compression fails, log the error but continue with original image

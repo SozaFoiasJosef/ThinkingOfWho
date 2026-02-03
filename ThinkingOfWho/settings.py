@@ -47,7 +47,13 @@ if os.environ.get('USE_R2_STORAGE', 'False') == 'True':
         },
     }
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-    MEDIA_URL = f'{AWS_S3_CUSTOM_DOMAIN}/' if AWS_S3_CUSTOM_DOMAIN else f'{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/'
+    # Build MEDIA_URL - custom domain already has https://, so just append /
+    if AWS_S3_CUSTOM_DOMAIN:
+        # Remove any protocol from custom domain if present, then add it properly
+        domain = AWS_S3_CUSTOM_DOMAIN.replace('https://', '').replace('http://', '')
+        MEDIA_URL = f'https://{domain}/'
+    else:
+        MEDIA_URL = f'{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/'
 else:
     # Local storage for development
     MEDIA_URL = '/media/'
