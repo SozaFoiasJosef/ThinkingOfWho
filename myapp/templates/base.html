@@ -44,6 +44,15 @@
             font-weight: bold;
             color: white;
             text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .logo-favicon {
+            width: 1.5em;
+            height: 1.5em;
+            vertical-align: middle;
         }
 
         nav ul {
@@ -148,7 +157,10 @@
     <!-- Header -->
     <header>
         <div class="header-container">
-            <a href="/" class="logo">Thinking of Who</a>
+            <a href="/" class="logo">
+                Thinking of Who
+                <img class="logo-favicon" src="/static/favicon.ico" alt="?">
+            </a>
             <nav>
                 <ul>
                     <li><a href="/">Home</a></li>
