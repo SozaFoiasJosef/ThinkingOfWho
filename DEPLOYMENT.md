@@ -1,4 +1,4 @@
-# GuessWho Production Deployment Guide
+# ThinkingOfWhoe Production Deployment Guide
 
 ## Production Checklist
 
