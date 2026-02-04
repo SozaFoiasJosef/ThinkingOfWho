@@ -17,7 +17,7 @@ class Player(models.Model):
     name = models.CharField(max_length=63, default='TestPlayer')
 
 def room_images_path(instance, filename):
-    return "room_images/%s-%s" % (instance.room.id, filename)
+    return "room_images/%s/%s" % (instance.room.id, filename)
 
 class Image(models.Model):
     room = models.ForeignKey(Room, on_delete=models.CASCADE, null=True, blank=True)

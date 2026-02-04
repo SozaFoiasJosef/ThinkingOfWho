@@ -202,15 +202,17 @@
 		overflow: hidden;
 		background: #f9f9f9;
 		aspect-ratio: 1;
-		display: flex;
-		align-items: center;
-		justify-content: center;
 	}
 
 	.image-preview img {
 		width: 100%;
 		height: 100%;
+		min-width: 100%;
+		min-height: 100%;
+		max-width: none;
+		max-height: none;
 		object-fit: cover;
+		display: block;
 	}
 
 	.image-preview .preview-label {
@@ -383,6 +385,122 @@
 	.lock-btn-container.visible {
 		opacity: 1;
 	}
+
+	.add-photos-section {
+		margin-top: 28px;
+		padding-top: 18px;
+		border-top: 2px solid #e6e6e6;
+		display: none;
+	}
+
+	.add-photos-section.visible {
+		display: block;
+	}
+
+	.add-photos-section h3 {
+		text-align: center;
+		color: #84BBE3;
+		margin-bottom: 16px;
+		font-size: 1.2rem;
+	}
+
+	.room_form {
+		display: grid;
+		grid-template-columns: repeat(8, 1fr);
+		gap: 12px;
+		width: 100%;
+	}
+
+	.room_form .form-row {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		background: #84BBE3;
+		padding: 12px;
+		border-radius: 6px;
+		border: 1px solid #e6e6e6;
+		transition: border-color 0.2s ease;
+	}
+
+	.room_form .form-row:hover {
+		border-color: #6a9bc9;
+	}
+
+	input[type="text"], input[type="file"], textarea, select {
+		padding: 10px 12px;
+		border: 1px solid #e6e6e6;
+		border-radius: 6px;
+		background: #fbfbfb;
+		font-size: 0.95rem;
+		box-sizing: border-box;
+		width: 100%;
+	}
+
+	input[type="file"] {
+		display: none;
+	}
+
+	.file-btn {
+		display: inline-block;
+		padding: 8px 14px;
+		background-color: #FFA69E;
+		color: white;
+		border: none;
+		border-radius: 6px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: background 0.2s ease, transform 0.06s ease;
+		text-align: center;
+		text-decoration: none;
+		position: relative;
+	}
+
+	.file-btn:hover {
+		background: #ff9085;
+		transform: translateY(-1px);
+	}
+
+	.add-photos-actions {
+		margin-top: 16px;
+		display: flex;
+		gap: 12px;
+		justify-content: center;
+		flex-wrap: wrap;
+	}
+
+	.image-preview-container-add {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+		gap: 12px;
+		margin-top: 12px;
+	}
+
+	.image-preview-container-add .image-preview img {
+		width: 100%;
+		height: 100%;
+		min-width: 100%;
+		min-height: 100%;
+		max-width: none;
+		max-height: none;
+		object-fit: cover;
+		display: block;
+	}
+
+	@media (max-width: 2000px) {
+		.room_form { grid-template-columns: repeat(6, 1fr); }
+	}
+	@media (max-width: 1200px) {
+		.room_form { grid-template-columns: repeat(4, 1fr); }
+	}
+	@media (max-width: 900px) {
+		.room_form { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+	}
+	@media (max-width: 600px) {
+		.room_form { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+	}
+	@media (max-width: 400px) {
+		.room_form { grid-template-columns: 1fr; }
+	}
 </style>
 
 <section class="form-card">
@@ -433,6 +551,39 @@
 		{% empty %}
 			<p>No images found for this game.</p>
 		{% endfor %}
+	</div>
+
+	<div style="margin:28px;display:flex;justify-content:center;">
+		<button type="button" id="toggle-add-photos" class="btn-fold">Add More Photos</button>
+	</div>
+
+	<div class="add-photos-section" id="add-photos-section">
+		<form id="add-photos-form" method="post" action="" enctype="multipart/form-data">
+			{% csrf_token %}
+			{{ add_formset.management_form }}
+
+			<div id="add-photos-rows" class="room_form">
+				{% for form in add_formset %}
+				<div class="form-row">
+					{% for field in form.visible_fields %}
+						{% if field.field.widget.input_type == 'file' %}
+							<label class="file-btn" for="{{ field.id_for_label }}">Choose Image</label>
+							<div class="image-preview-container-add form-row-preview"></div>
+							{{ field }}
+						{% else %}
+							{% with field as f %}
+								{{ f }}
+							{% endwith %}
+						{% endif %}
+					{% endfor %}
+				</div>
+				{% endfor %}
+			</div>
+
+			<div class="add-photos-actions">
+				<button type="submit" class="btn-fold">Upload photos</button>
+			</div>
+		</form>
 	</div>
 </section>
 
@@ -574,7 +725,84 @@
 				document.body.removeChild(ta);
 			}
 		}
+
+		// Function to handle image preview
+		function updateImagePreview(input, previewContainer) {
+			previewContainer.innerHTML = '';
+			if (input.files && input.files[0]) {
+				var reader = new FileReader();
+				reader.onload = function(e) {
+					var preview = document.createElement('div');
+					preview.className = 'image-preview';
+					
+					var img = document.createElement('img');
+					img.src = e.target.result;
+					
+					var label = document.createElement('div');
+					label.className = 'preview-label';
+					label.textContent = input.files[0].name;
+					
+					preview.appendChild(img);
+					preview.appendChild(label);
+					previewContainer.appendChild(preview);
+				};
+				reader.readAsDataURL(input.files[0]);
+			}
+		}
+
+		// Function to attach preview and paste listeners to file inputs
+		function attachFileInputListeners(input) {
+			var formRow = input.closest('.form-row');
+			if (!formRow) return;
 			
+			var previewContainer = formRow.querySelector('.image-preview-container-add');
+			if (!previewContainer) return;
+
+			// Preview on change
+			input.addEventListener('change', function() {
+				updateImagePreview(input, previewContainer);
+			});
+
+			// Paste event listener for clipboard image support
+			input.parentNode.addEventListener('paste', function(e) {
+				var items = (e.clipboardData || e.originalEvent.clipboardData).items;
+				for (var i = 0; i < items.length; i++) {
+					if (items[i].kind === 'file' && items[i].type.indexOf('image') !== -1) {
+						e.preventDefault();
+						var file = items[i].getAsFile();
+						
+						// Create a DataTransfer to set the file on the input
+						var dataTransfer = new DataTransfer();
+						dataTransfer.items.add(file);
+						input.files = dataTransfer.files;
+						
+						// Trigger change event to update preview
+						var event = new Event('change', { bubbles: true });
+						input.dispatchEvent(event);
+						break;
+					}
+				}
+			});
+		}
+
+		// Attach listeners to existing file inputs
+		document.querySelectorAll('#add-photos-form input[type="file"]').forEach(function(input) {
+			attachFileInputListeners(input);
+		});
+
+		// Toggle add photos section
+		var toggleBtn = document.getElementById('toggle-add-photos');
+		var addPhotosSection = document.getElementById('add-photos-section');
+		if (toggleBtn && addPhotosSection) {
+			toggleBtn.addEventListener('click', function() {
+				addPhotosSection.classList.toggle('visible');
+				if (addPhotosSection.classList.contains('visible')) {
+					toggleBtn.textContent = 'Hide More Photos';
+				} else {
+					toggleBtn.textContent = 'Add More Photos';
+				}
+			});
+		}
 		
 	})();
 </script>

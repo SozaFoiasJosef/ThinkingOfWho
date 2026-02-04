@@ -63,8 +63,36 @@ def gamelist(request,room_name):
 
 def game(request, room_id):
     room = get_object_or_404(Room, pk=room_id)
+    ImageFormSet = modelformset_factory(Image, form=ImageForm, extra=8)
+
+    if request.method == 'POST':
+        add_formset = ImageFormSet(
+            request.POST,
+            request.FILES,
+            queryset=Image.objects.none(),
+            prefix='add'
+        )
+        if add_formset.is_valid():
+            for form in add_formset.cleaned_data:
+                if form:
+                    title = form.get('title')
+                    image = form.get('image')
+                    if image:
+                        Image.objects.create(room=room, image=image, title=title)
+            messages.success(request, "Photos added!")
+            return redirect(reverse('game', args=[room.id]))
+        else:
+            messages.error(request, "Unable to add photos. Please check your files and try again.")
+    else:
+        add_formset = ImageFormSet(queryset=Image.objects.none(), prefix='add')
+
     images = Image.objects.filter(room=room)
-    return render(request, 'game.html', {'title': 'Game Room', 'room': room, 'images': images})
+    return render(request, 'game.html', {
+        'title': 'Game Room',
+        'room': room,
+        'images': images,
+        'add_formset': add_formset
+    })
 
 def tos(request):
     return render(request, 'tos.html', {'title': 'Terms of Service'})

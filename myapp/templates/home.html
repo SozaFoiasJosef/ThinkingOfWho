@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ title }} - Thinking of Who{% endblock %}
+{% block title %}{{ title }}{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -139,12 +139,21 @@
         font-size: 0.95em;
         line-height: 1.6;
     }
+
+
+    .logo-favicon {
+        width: 1.5em;
+        height: 1.5em;
+        vertical-align: middle;
+    }
+
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="welcome-section">
-    <h1>{{ title }}</h1>
+    <h1>{{ title }}
+    <img class="logo-favicon" src="/static/favicon.ico" alt="?"></h1>
     <p>Have fun playing this image-based deduction game!</p>
     <a href="/creategame/" class="cta-button">Start Playing</a>
 </div>
