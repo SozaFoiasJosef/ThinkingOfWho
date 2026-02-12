@@ -16,4 +16,4 @@ Create a name for the game you made so you can search it up later or in case you
 ### How to play (2 players):
 Your goal is deduce which thing/person/place your opponent chose by taking turns asking yes or no questions. Play in 3-5 rounds. Don't reuse questions.
 
-Deployed on Digital Ocean with Cloudflare R2 for image storage.
+Created with Django, deployed on Digital Ocean with Cloudflare R2 for image storage.

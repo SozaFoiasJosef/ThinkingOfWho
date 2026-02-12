@@ -353,13 +353,17 @@
 		
 		async function tryJoinRoomName(){
 			var roomName = nameInput.value.trim();
-			if(!roomName) return;
+			// If no name provided, show all searchable rooms
+			if(!roomName){
+				window.location.href = `/gamelistall/ `;
+				return;
+			}
 
 			try {
 				const response = await fetch(`/gamelist/${encodeURIComponent(roomName)}/`, {
 					method: "HEAD"
 				});
-			
+		
 				if (response.ok) {
 					window.location.href = `/gamelist/${encodeURIComponent(roomName)}/`;
 				} else if (response.status === 404) {
