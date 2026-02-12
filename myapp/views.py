@@ -58,12 +58,13 @@ def creategame(request):
 
 # Used for searching rooms by name
 def gamelist(request,room_name):
-    rooms = Room.objects.filter(name__icontains=room_name, isSearchable = True).order_by('-created_at')
+    rooms = Room.objects.filter(name__icontains=room_name, isSearchable = True, image__isnull=False).distinct().order_by('-created_at')
     return render(request, 'gamelist.html', {'title': 'Game List', 'rooms': rooms, 'search_name': room_name})
 
 # Used for showing all rooms
 def gamelistall(request):
-    rooms = Room.objects.filter(isSearchable = True).order_by('-created_at')
+    rooms = Room.objects.filter(isSearchable = True, image__isnull=False).distinct().order_by('-created_at')
+    
     return render(request, 'gamelist.html', {'title': 'Game List', 'rooms': rooms})
 
 
