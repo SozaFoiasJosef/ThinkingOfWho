@@ -54,3 +54,5 @@ htmlcov/
 /images/
 room_images/
 /do_not_share.txt
+boto3test.py
+DEPLOYMENT.md
