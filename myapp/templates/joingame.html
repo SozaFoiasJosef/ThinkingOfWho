@@ -306,6 +306,7 @@
 			<div class="room-code-section">
 				<input type="text" id="room-name-input" placeholder="Enter game name..." />
 				<button id="join-room-by-name-btn">Find Game</button>
+				<button id="search-all-btn">View All</button>
 			</div>
 		</div>
 	</div>
@@ -350,12 +351,18 @@
 		// Room name join functionality
 		var joinByNameBtn = document.getElementById('join-room-by-name-btn');
 		var nameInput = document.getElementById('room-name-input');
+		var searchAllBtn = document.getElementById('search-all-btn');
+
+		async function searchAllRooms(){
+			window.location.href = '/gamelistall/';
+			return;
+		}
 		
 		async function tryJoinRoomName(){
 			var roomName = nameInput.value.trim();
 			// If no name provided, show all searchable rooms
 			if(!roomName){
-				window.location.href = `/gamelistall/ `;
+				searchAllRooms();
 				return;
 			}
 
@@ -374,6 +381,10 @@
 			} catch (error) {
 				alert('Network error. Please try again.');
 			}
+		}
+
+		if(searchAllBtn) {
+			searchAllBtn.addEventListener('click', searchAllRooms);
 		}
 		
 		if(joinByNameBtn && nameInput){
