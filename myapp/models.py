@@ -13,6 +13,10 @@ class Room(models.Model):
     #opponent = models.ForeignKey('Player', on_delete=models.CASCADE, null=True, blank=True)
 
 
+class RoomHitTarget(models.Model):
+    room = models.OneToOneField(Room, on_delete=models.CASCADE, related_name='hit_target')
+
+
 class Player(models.Model):
     name = models.CharField(max_length=63, default='TestPlayer')
 

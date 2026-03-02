@@ -61,7 +61,10 @@
     white-space:nowrap; 
 }
   .room-name-col { 
-    width:35%; 
+    width:28%; 
+}
+  .room-rank-col {
+    width:8%;
 }
   .room-images-col { 
     width:45%; 
@@ -108,6 +111,7 @@
       <tr>
         <th class="room-name-col sortable" data-sort="name">Game Name</th>
         <th class="room-images-col">Images</th>
+        <th class="room-rank-col sortable" data-sort="rank">Rank</th>
         <th class="room-date-col sortable" data-sort="date">Date Created</th>
       </tr>
     </thead>
@@ -126,10 +130,11 @@
             {% endif %}
           {% endwith %}
         </td>
+        <td class="room-rank-col" data-rank="{{ room.popularity_rank }}">{{ room.popularity_rank }}</td>
         <td class="room-date-col">{{ room.created_at|date:"m/d/Y" }}</td>
       </tr>
       {% empty %}
-      <tr><td colspan="3">No games found.</td></tr>
+      <tr><td colspan="4">No games found.</td></tr>
       {% endfor %}
     </tbody>
   </table>
@@ -147,9 +152,11 @@
     function getRowData(row) {
       var nameCell = row.querySelector('.room-name-col a');
       var dateCell = row.querySelector('.room-date-col');
+      var rankCell = row.querySelector('.room-rank-col');
       return {
         name: nameCell ? nameCell.textContent.trim() : '',
         date: dateCell ? dateCell.textContent.trim() : '',
+        rank: rankCell ? parseInt(rankCell.dataset.rank || rankCell.textContent.trim() || '0', 10) : 0,
         row: row
       };
     }
@@ -168,8 +175,19 @@
       rows.sort(function(a, b) {
         var aData = getRowData(a);
         var bData = getRowData(b);
-        var aVal = sortKey === 'name' ? aData.name : new Date(aData.date).getTime();
-        var bVal = sortKey === 'name' ? bData.name : new Date(bData.date).getTime();
+        var aVal;
+        var bVal;
+
+        if (sortKey === 'name') {
+          aVal = aData.name;
+          bVal = bData.name;
+        } else if (sortKey === 'rank') {
+          aVal = aData.rank;
+          bVal = bData.rank;
+        } else {
+          aVal = new Date(aData.date).getTime();
+          bVal = new Date(bData.date).getTime();
+        }
 
         if (typeof aVal === 'string') {
           aVal = aVal.toLowerCase();
