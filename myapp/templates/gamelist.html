@@ -171,7 +171,7 @@
       <tr>
         <td class="room-name-col"><a href="{% url 'game' room.id %}">{{ room.name }}</a></td>
         <td class="room-images-col">
-          {% with imgs=room.image_set.all|slice:":4" %}
+          {% with imgs=room.image_set.all|slice:":8" %}
             {% if imgs %}
               {% for img in imgs %}
                 <span class="image-preview-inline"><img src="{{ img.image.url }}" alt="{{ img.title }}"></span>
