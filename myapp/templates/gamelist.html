@@ -23,23 +23,28 @@
     padding:12px; 
     text-align:left; 
     border-bottom:1px solid #e6e6e6; 
-    z-index:2; cursor:pointer; 
-    user-select:none; 
+    z-index:2;
 }
+  .rooms-table thead th.sortable {
+    padding: 0;
+    cursor: pointer;
+  }
   .rooms-table thead th:hover { 
     background:#f0f0f0; 
 }
-  .rooms-table thead th.sortable::after { 
+  .rooms-table thead th.sortable a::after { 
     content:' ↕'; 
-    font-size:0.75rem; 
+    font-size:1rem; 
     color:#999; 
 }
-  .rooms-table thead th.sort-asc::after { 
+  .rooms-table thead th.sort-asc a::after { 
     content:' ↑'; color:#333; 
+    font-size:1rem; 
 }
-  .rooms-table thead th.sort-desc::after { 
+  .rooms-table thead th.sort-desc a::after { 
     content:' ↓'; 
     color:#333; 
+    font-size:1rem; 
 }
   /* make tbody scrollable */
   .rooms-table tbody { 
@@ -60,6 +65,17 @@
     text-overflow:ellipsis; 
     white-space:nowrap; 
 }
+  .rooms-table thead th a {
+    color: inherit;
+    text-decoration: none;
+    display: block;
+    width: 100%;
+  }
+  .rooms-table thead th.sortable a {
+    padding: 12px;
+    height: 100%;
+    box-sizing: border-box;
+  }
   .room-name-col { 
     width:28%; 
 }
@@ -90,6 +106,32 @@
     color:#999; 
     font-size:0.9rem; 
 }
+  .pagination-controls {
+    margin-top: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .pagination-button {
+    padding: 6px 12px;
+    border: 1px solid #d0d0d0;
+    border-radius: 6px;
+    background: #fff;
+    color: #333;
+    text-decoration: none;
+  }
+  .pagination-button:hover {
+    background: #f4f4f4;
+  }
+  .pagination-button.disabled {
+    pointer-events: none;
+    opacity: 0.5;
+  }
+  .pagination-status {
+    color: #666;
+    font-size: 0.95rem;
+  }
   @media (max-width:900px){ 
     .image-preview-inline{
         width:48px;
@@ -109,14 +151,20 @@
   <table class="rooms-table" aria-describedby="results-count">
     <thead>
       <tr>
-        <th class="room-name-col sortable" data-sort="name">Game Name</th>
+        <th class="room-name-col sortable {% if sort_key == 'name' %}sort-{{ sort_dir }}{% endif %}">
+          <a href="?sort=name&dir={{ next_dir.name }}&page=1">Game Name</a>
+        </th>
         <th class="room-images-col">Images</th>
-        <th class="room-rank-col sortable" data-sort="rank">Rank</th>
-        <th class="room-date-col sortable" data-sort="date">Date Created</th>
+        <th class="room-rank-col sortable {% if sort_key == 'rank' %}sort-{{ sort_dir }}{% endif %}">
+          <a href="?sort=rank&dir={{ next_dir.rank }}&page=1">Rank</a>
+        </th>
+        <th class="room-date-col sortable {% if sort_key == 'date' %}sort-{{ sort_dir }}{% endif %}">
+          <a href="?sort=date&dir={{ next_dir.date }}&page=1">Date Created</a>
+        </th>
       </tr>
     </thead>
     <tbody>
-      {% for room in rooms|slice:":50" %}
+      {% for room in rooms %}
       <tr>
         <td class="room-name-col"><a href="{% url 'game' room.id %}">{{ room.name }}</a></td>
         <td class="room-images-col">
@@ -138,79 +186,21 @@
       {% endfor %}
     </tbody>
   </table>
+
+  <div class="pagination-controls">
+    {% if pagination.has_prev %}
+      <a class="pagination-button" href="?sort={{ sort_key }}&dir={{ sort_dir }}&page={{ pagination.prev_page }}">Previous</a>
+    {% else %}
+      <span class="pagination-button disabled">Previous</span>
+    {% endif %}
+
+    <span class="pagination-status">Page {{ pagination.page }}</span>
+
+    {% if pagination.has_next %}
+      <a class="pagination-button" href="?sort={{ sort_key }}&dir={{ sort_dir }}&page={{ pagination.next_page }}">Next</a>
+    {% else %}
+      <span class="pagination-button disabled">Next</span>
+    {% endif %}
+  </div>
 </section>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-  (function(){
-    var table = document.querySelector('.rooms-table');
-    var tbody = table.querySelector('tbody');
-    var headers = table.querySelectorAll('th[data-sort]');
-    var currentSort = { key: null, dir: 'asc' };
-
-    function getRowData(row) {
-      var nameCell = row.querySelector('.room-name-col a');
-      var dateCell = row.querySelector('.room-date-col');
-      var rankCell = row.querySelector('.room-rank-col');
-      return {
-        name: nameCell ? nameCell.textContent.trim() : '',
-        date: dateCell ? dateCell.textContent.trim() : '',
-        rank: rankCell ? parseInt(rankCell.dataset.rank || rankCell.textContent.trim() || '0', 10) : 0,
-        row: row
-      };
-    }
-
-    function sortTable(sortKey) {
-      var rows = Array.from(tbody.querySelectorAll('tr')).filter(r => r.querySelector('a'));
-      if (!rows.length) return;
-
-      if (currentSort.key === sortKey) {
-        currentSort.dir = currentSort.dir === 'asc' ? 'desc' : 'asc';
-      } else {
-        currentSort.key = sortKey;
-        currentSort.dir = 'asc';
-      }
-
-      rows.sort(function(a, b) {
-        var aData = getRowData(a);
-        var bData = getRowData(b);
-        var aVal;
-        var bVal;
-
-        if (sortKey === 'name') {
-          aVal = aData.name;
-          bVal = bData.name;
-        } else if (sortKey === 'rank') {
-          aVal = aData.rank;
-          bVal = bData.rank;
-        } else {
-          aVal = new Date(aData.date).getTime();
-          bVal = new Date(bData.date).getTime();
-        }
-
-        if (typeof aVal === 'string') {
-          aVal = aVal.toLowerCase();
-          bVal = bVal.toLowerCase();
-        }
-
-        return currentSort.dir === 'asc' ? (aVal > bVal ? 1 : -1) : (aVal < bVal ? 1 : -1);
-      });
-
-      headers.forEach(h => h.classList.remove('sort-asc', 'sort-desc'));
-      var activeHeader = Array.from(headers).find(h => h.dataset.sort === sortKey);
-      if (activeHeader) {
-        activeHeader.classList.add(currentSort.dir === 'asc' ? 'sort-asc' : 'sort-desc');
-      }
-
-      rows.forEach(row => tbody.appendChild(row));
-    }
-
-    headers.forEach(header => {
-      header.addEventListener('click', function() {
-        sortTable(this.dataset.sort);
-      });
-    });
-  })();
-</script>
 {% endblock %}

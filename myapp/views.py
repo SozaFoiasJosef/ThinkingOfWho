@@ -90,6 +90,61 @@ def _with_room_popularity(rooms_queryset, rank_queryset=None):
     return rooms
 
 
+def _sort_and_limit_rooms(request, rooms):
+    sort_key = request.GET.get('sort', 'rank')
+    sort_dir = request.GET.get('dir', 'asc')
+    page_param = request.GET.get('page', '1')
+
+    if sort_key not in ['name', 'rank', 'date']:
+        sort_key = 'rank'
+    if sort_dir not in ['asc', 'desc']:
+        sort_dir = 'asc'
+    try:
+        page = int(page_param)
+    except (TypeError, ValueError):
+        page = 1
+    if page < 1:
+        page = 1
+
+    reverse = sort_dir == 'desc'
+
+    if sort_key == 'name':
+        rooms.sort(key=lambda room: room.name.lower(), reverse=reverse)
+    elif sort_key == 'rank':
+        rooms.sort(key=lambda room: room.popularity_rank, reverse=reverse)
+    else:
+        rooms.sort(key=lambda room: room.created_at, reverse=reverse)
+
+    next_dir = {
+        'name': 'asc',
+        'rank': 'asc',
+        'date': 'desc',
+    }
+    next_dir[sort_key] = 'desc' if sort_dir == 'asc' else 'asc'
+
+    page_size = 50
+    total_count = len(rooms)
+    max_page = max((total_count - 1) // page_size + 1, 1)
+    if page > max_page:
+        page = max_page
+
+    start_index = (page - 1) * page_size
+    end_index = start_index + page_size
+    paged_rooms = rooms[start_index:end_index]
+
+    pagination = {
+        'page': page,
+        'page_size': page_size,
+        'total_count': total_count,
+        'has_prev': page > 1,
+        'has_next': end_index < total_count,
+        'prev_page': page - 1,
+        'next_page': page + 1,
+    }
+
+    return paged_rooms, sort_key, sort_dir, next_dir, pagination
+
+
 def gamelist(request,room_name):
     rooms_queryset = Room.objects.filter(
         name__icontains=room_name,
@@ -98,14 +153,32 @@ def gamelist(request,room_name):
     ).distinct()
     global_rank_queryset = Room.objects.filter(isSearchable=True, image__isnull=False).distinct()
     rooms = _with_room_popularity(rooms_queryset, rank_queryset=global_rank_queryset)
-    return render(request, 'gamelist.html', {'title': 'Game List', 'rooms': rooms, 'search_name': room_name})
+    rooms, sort_key, sort_dir, next_dir, pagination = _sort_and_limit_rooms(request, rooms)
+    return render(request, 'gamelist.html', {
+        'title': 'Game List',
+        'rooms': rooms,
+        'search_name': room_name,
+        'sort_key': sort_key,
+        'sort_dir': sort_dir,
+        'next_dir': next_dir,
+        'pagination': pagination,
+    })
 
 # Used for showing all rooms
 def gamelistall(request):
     rooms_queryset = Room.objects.filter(isSearchable=True, image__isnull=False).distinct()
     rooms = _with_room_popularity(rooms_queryset)
-    
-    return render(request, 'gamelist.html', {'title': 'Game List', 'rooms': rooms})
+    rooms, sort_key, sort_dir, next_dir, pagination = _sort_and_limit_rooms(request, rooms)
+
+    return render(request, 'gamelist.html', {
+        'title': 'Game List',
+        'rooms': rooms,
+        'search_name': '',
+        'sort_key': sort_key,
+        'sort_dir': sort_dir,
+        'next_dir': next_dir,
+        'pagination': pagination,
+    })
 
 
 def game(request, room_id):
