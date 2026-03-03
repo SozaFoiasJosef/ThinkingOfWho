@@ -27,7 +27,7 @@ class ImageForm(forms.ModelForm):
         label='',
         max_length=65,
         required=False,
-        widget=forms.TextInput(attrs={'placeholder': 'Image Title'})
+        widget=forms.TextInput(attrs={'placeholder': 'Title (optional)'})
     )
 
     class Meta:

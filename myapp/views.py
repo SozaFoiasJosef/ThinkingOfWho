@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import OuterRef, Subquery, IntegerField, Value
+from django.db.models import OuterRef, Subquery, IntegerField, Value, Count
 from django.db.models.functions import Coalesce
 from hitcount.models import HitCount
 from hitcount.views import HitCountMixin
@@ -149,9 +149,10 @@ def gamelist(request,room_name):
     rooms_queryset = Room.objects.filter(
         name__icontains=room_name,
         isSearchable=True,
-        image__isnull=False
-    ).distinct()
-    global_rank_queryset = Room.objects.filter(isSearchable=True, image__isnull=False).distinct()
+    ).annotate(image_count=Count('image')).filter(image_count__gte=4)
+    global_rank_queryset = Room.objects.filter(
+        isSearchable=True,
+    ).annotate(image_count=Count('image')).filter(image_count__gte=4)
     rooms = _with_room_popularity(rooms_queryset, rank_queryset=global_rank_queryset)
     rooms, sort_key, sort_dir, next_dir, pagination = _sort_and_limit_rooms(request, rooms)
     return render(request, 'gamelist.html', {
@@ -166,7 +167,9 @@ def gamelist(request,room_name):
 
 # Used for showing all rooms
 def gamelistall(request):
-    rooms_queryset = Room.objects.filter(isSearchable=True, image__isnull=False).distinct()
+    rooms_queryset = Room.objects.filter(
+        isSearchable=True,
+    ).annotate(image_count=Count('image')).filter(image_count__gte=4)
     rooms = _with_room_popularity(rooms_queryset)
     rooms, sort_key, sort_dir, next_dir, pagination = _sort_and_limit_rooms(request, rooms)
 

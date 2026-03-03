@@ -28,6 +28,7 @@
   .rooms-table thead th.sortable {
     padding: 0;
     cursor: pointer;
+    text-align: center;
   }
   .rooms-table thead th:hover { 
     background:#f0f0f0; 
@@ -77,16 +78,18 @@
     box-sizing: border-box;
   }
   .room-name-col { 
-    width:28%; 
+    width:28%;
 }
   .room-rank-col {
-    width:8%;
+    width:25%;
+    text-align: center;
 }
   .room-images-col { 
-    width:45%; 
+    width:45%;
 }
   .room-date-col { 
-    width:20%; 
+    width:20%;
+    text-align: center; 
 }
   .image-preview-inline { 
     display:inline-block; 
@@ -151,12 +154,12 @@
   <table class="rooms-table" aria-describedby="results-count">
     <thead>
       <tr>
-        <th class="room-name-col sortable {% if sort_key == 'name' %}sort-{{ sort_dir }}{% endif %}">
+        <th class="room-name-col sortable {% if sort_key == 'name' %}sort-{{ sort_dir }}{% endif %}" style="text-align:left">
           <a href="?sort=name&dir={{ next_dir.name }}&page=1">Game Name</a>
         </th>
         <th class="room-images-col">Images</th>
         <th class="room-rank-col sortable {% if sort_key == 'rank' %}sort-{{ sort_dir }}{% endif %}">
-          <a href="?sort=rank&dir={{ next_dir.rank }}&page=1">Rank</a>
+          <a href="?sort=rank&dir={{ next_dir.rank }}&page=1">Popularity</a>
         </th>
         <th class="room-date-col sortable {% if sort_key == 'date' %}sort-{{ sort_dir }}{% endif %}">
           <a href="?sort=date&dir={{ next_dir.date }}&page=1">Date Created</a>
