@@ -16,7 +16,7 @@ from .models import Image, Room, RoomHitTarget
 
 # Create your views here.
 def home(request):
-    return render(request, 'home.html', {'title': 'Thinking of Who - Free Online Deduction Game'})
+    return render(request, 'home.html', {'title': 'Thinking of Who - Free Online Guessing Game'})
 
 def joingame(request):
     return render(request, 'joingame.html', {'title': 'Play Thinking of Who'})
